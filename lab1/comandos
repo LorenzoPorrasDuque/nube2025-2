@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Create the first instance
+aws ec2 run-instances \
+  --image-id "ami-04a81a99f5ec58529" \
+  --instance-type "t2.micro" \
+  --key-name "distribuida2024" \
+  --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"Encrypted":false,"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0e23f460473beecc6","VolumeSize":8,"VolumeType":"gp3","Throughput":125}}]' \
+  --network-interfaces '[{"AssociatePublicIpAddress":true,"DeviceIndex":0,"Groups":["sg-0eb2bab68538e8663"]}]' \
+  --tag-specifications '[{"ResourceType":"instance","Tags":[{"Key":"Name","Value":"bd"}]}]' \
+  --metadata-options '{"HttpEndpoint":"enabled","HttpPutResponseHopLimit":2,"HttpTokens":"required"}' \
+  --private-dns-name-options '{"HostnameType":"ip-name","EnableResourceNameDnsARecord":true,"EnableResourceNameDnsAAAARecord":false}' \
+  --client-token "$(uuidgen)" \
+  --count 1
+
+
+
+# Create the second instance
+aws ec2 run-instances \
+  --image-id "ami-04a81a99f5ec58529" \
+  --instance-type "t2.micro" \
+  --key-name "distribuida2024" \
+  --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"Encrypted":false,"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0e23f460473beecc6","VolumeSize":8,"VolumeType":"gp3","Throughput":125}}]' \
+  --network-interfaces '[{"AssociatePublicIpAddress":true,"DeviceIndex":0,"Groups":["sg-0348c61037cf6d811"]}]' \
+  --tag-specifications '[{"ResourceType":"instance","Tags":[{"Key":"Name","Value":"front"}]}]' \
+  --metadata-options '{"HttpEndpoint":"enabled","HttpPutResponseHopLimit":2,"HttpTokens":"required"}' \
+  --private-dns-name-options '{"HostnameType":"ip-name","EnableResourceNameDnsARecord":true,"EnableResourceNameDnsAAAARecord":false}' \
+  --client-token "$(uuidgen)" \
+  --count 1
+
+
+
+# Create the third instance
+aws ec2 run-instances \
+  --image-id "ami-04a81a99f5ec58529" \
+  --instance-type "t2.micro" \
+  --key-name "distribuida2024" \
+  --block-device-mappings '[{"DeviceName":"/dev/sda1","Ebs":{"Encrypted":false,"DeleteOnTermination":true,"Iops":3000,"SnapshotId":"snap-0e23f460473beecc6","VolumeSize":8,"VolumeType":"gp3","Throughput":125}}]' \
+  --network-interfaces '[{"AssociatePublicIpAddress":true,"DeviceIndex":0,"Groups":["sg-0348c61037cf6d811"]}]' \
+  --tag-specifications '[{"ResourceType":"instance","Tags":[{"Key":"Name","Value":"back"}]}]' \
+  --metadata-options '{"HttpEndpoint":"enabled","HttpPutResponseHopLimit":2,"HttpTokens":"required"}' \
+  --private-dns-name-options '{"HostnameType":"ip-name","EnableResourceNameDnsARecord":true,"EnableResourceNameDnsAAAARecord":false}' \
+  --client-token "$(uuidgen)" \
+  --count 1
+
+       
