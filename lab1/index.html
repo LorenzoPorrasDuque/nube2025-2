@@ -11,7 +11,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Function to fetch products from backend
             function fetchProducts() {
-                fetch('localhost/2-products.php')
+                fetch('2-products.php')
                     .then(response => response.json())
                     .then(products => {
                         const productsContainer = document.getElementById('products-list');
