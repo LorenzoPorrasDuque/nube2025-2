@@ -1,0 +1,107 @@
+/* ===========================================
+   HOME PAGE SPECIFIC STYLES
+   =========================================== */
+
+/* List group styles for home page sidebar */
+.list-group-item {
+    background: var(--light-blue);
+    border: none;
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.list-group-item:hover {
+    background: var(--secondary-color);
+    color: var(--white);
+}
+
+.list-group-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Accordion styles for home page */
+.accordion-button {
+    background: var(--light-blue);
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.accordion-button:not(.collapsed) {
+    background: var(--secondary-color);
+    color: var(--white);
+}
+
+.accordion-body {
+    background: var(--light-bg);
+}
+
+/* Carousel specific styles */
+.carousel-inner img {
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--shadow-medium);
+    transition: transform 0.3s ease;
+}
+
+.carousel-inner img:hover {
+    transform: scale(1.02);
+}
+
+/* Advertisement column styles */
+.d-flex.flex-column.gap-3 img {
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--shadow-light);
+    transition: transform 0.3s ease;
+}
+
+.d-flex.flex-column.gap-3 img:hover {
+    transform: scale(1.05);
+}
+
+/* Integrated Products Section Styles */
+.card {
+    border: none;
+    box-shadow: var(--shadow-light);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-medium);
+}
+
+.card-img-top {
+    border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+}
+
+/* Form check styling for filters */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-range::-webkit-slider-thumb {
+    background-color: var(--primary-color);
+}
+
+.form-range::-moz-range-thumb {
+    background-color: var(--primary-color);
+    border: none;
+}
+
+/* Home page specific responsive styles */
+@media (max-width: 767px) {
+    .carousel-inner img {
+        height: 200px !important;
+        max-height: 200px !important;
+    }
+
+    .col-md-2 {
+        margin-bottom: 1rem;
+    }
+
+    .d-flex.flex-wrap.gap-2 {
+        justify-content: center !important;
+    }
+}

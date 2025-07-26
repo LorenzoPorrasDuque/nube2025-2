@@ -1,0 +1,73 @@
+/* ===========================================
+   ABOUT PAGE SPECIFIC STYLES
+   =========================================== */
+
+/* About page hero section */
+.about-hero {
+    background: var(--gradient-header);
+    color: var(--white);
+    padding: 4rem 0;
+    text-align: center;
+}
+
+.about-hero h1 {
+    font-size: 3rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+}
+
+.about-hero p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+/* Team member cards */
+.team-card {
+    background: var(--white);
+    border-radius: var(--border-radius-small);
+    box-shadow: var(--shadow-medium);
+    padding: 2rem;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover {
+    transform: translateY(-5px);
+}
+
+.team-card img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+}
+
+/* Company timeline */
+.timeline {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+    transform: translateX(-50%);
+}
+
+.timeline-item {
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.timeline-content {
+    background: var(--white);
+    border-radius: var(--border-radius-small);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-light);
+}
