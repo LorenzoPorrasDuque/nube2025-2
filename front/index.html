@@ -49,10 +49,10 @@
                 <nav class="navbar-nav me-3">
                     <ul class="nav nav-pills">
                         <li class="nav-item">
-                            <a class="nav-link active" href="/index.html">Home</a>
+                            <a class="nav-link active" href="index.html">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/about.html">About</a>
+                            <a class="nav-link" href="about.html">About</a>
                         </li>
                     </ul>
                 </nav>
@@ -198,8 +198,8 @@
                     var activeClass = idx === 0 ? 'active' : '';
                     carousel.innerHTML += `
                         <div class="carousel-item ${activeClass}">
-                            <img src="${imageUrl}" class="d-block mx-auto" alt="Product ${idx + 1}"
-                                style="width:100%; max-width:600px; height:400px; object-fit:contain; background:#fff;">
+                            <img src="${imageUrl}" class="d-block w-100 h-100" alt="Product ${idx + 1}"
+                                style="width:100%; height:400px; object-fit:cover;">
                         </div>
                     `;
                 });

@@ -2,6 +2,157 @@
    ABOUT PAGE SPECIFIC STYLES
    =========================================== */
 
+/* Hatsune Miku Cute Theme for About Page */
+:root {
+    --miku-blue: #39c5bb;
+    --miku-teal: #00bfae;
+    --miku-pink: #ffb7e5;
+    --miku-white: #f7faff;
+    --miku-dark: #222b3a;
+    --miku-accent: #aee9f7;
+}
+
+html,
+body {
+    min-height: 100vh;
+    height: 100%;
+    background: linear-gradient(135deg, var(--miku-white) 60%, var(--miku-accent) 100%) !important;
+    font-family: 'Quicksand', 'Nunito', 'Segoe UI', Arial, sans-serif;
+    color: var(--miku-dark);
+}
+
+header,
+.navbar-nav .nav-link.active {
+    background: var(--miku-blue);
+    color: white !important;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 2px 12px rgba(57, 197, 187, 0.12);
+}
+
+.navbar-nav .nav-link {
+    color: var(--miku-dark) !important;
+    border-radius: 16px;
+    margin: 0 4px;
+    transition: background 0.2s;
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+.navbar-nav .nav-link:hover {
+    background: var(--miku-pink);
+    color: var(--miku-dark) !important;
+    text-decoration: none !important;
+}
+
+.navbar-nav .nav-link.active {
+    background: var(--miku-teal) !important;
+    color: white !important;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 191, 174, 0.15);
+}
+
+.navbar-nav .nav-link,
+.navbar-nav .nav-link.active {
+    font-size: 1.1rem;
+    font-weight: bold;
+    padding: 0.6em 1.4em;
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgba(34, 43, 58, 0.22);
+    background: linear-gradient(90deg, #008fa1 60%, #ff4fae 100%);
+    color: #fff !important;
+    border: 3px solid #222b3a;
+    margin: 0 8px;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    text-decoration: none !important;
+}
+
+.navbar-nav .nav-link.active {
+    background: linear-gradient(90deg, #ff4fae 60%, #008fa1 100%) !important;
+    color: #fff !important;
+    border: 3px solid #ff4fae;
+    box-shadow: 0 6px 24px rgba(255, 79, 174, 0.22);
+}
+
+.navbar-nav .nav-link:hover {
+    background: linear-gradient(90deg, #00bfae 60%, #ff4fae 100%);
+    color: #fff !important;
+    box-shadow: 0 8px 32px rgba(34, 43, 58, 0.28);
+    text-decoration: none !important;
+}
+
+.card {
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgba(57, 197, 187, 0.10);
+    border: 2px solid var(--miku-blue);
+    background: var(--miku-pink);
+    color: white;
+}
+
+.card-title {
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.card-text {
+    color: white;
+}
+
+.list-group-item {
+    background: var(--miku-white);
+    color: var(--miku-dark);
+    border-radius: 12px;
+    margin-bottom: 4px;
+    border: 1px solid var(--miku-accent);
+}
+
+.btn-outline-primary,
+.btn {
+    border-radius: 16px;
+    border-color: var(--miku-blue);
+    color: var(--miku-blue);
+    background: var(--miku-white);
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-outline-primary:hover,
+.btn:hover {
+    background: var(--miku-blue);
+    color: white;
+}
+
+/* Social Buttons */
+.btn-outline-primary {
+    background: var(--miku-pink);
+    color: var(--miku-dark);
+    border-color: var(--miku-pink);
+}
+
+.btn-outline-info {
+    background: var(--miku-blue);
+    color: white;
+    border-color: var(--miku-blue);
+}
+
+.btn-outline-danger {
+    background: var(--miku-teal);
+    color: white;
+    border-color: var(--miku-teal);
+}
+
+/* Cute details */
+header img,
+.card-img-top {
+    border: 2px solid var(--miku-blue);
+}
+
+@media (max-width: 768px) {
+    .card-img-top {
+        width: 100% !important;
+        height: auto !important;
+    }
+}
+
 /* About page hero section */
 .about-hero {
     background: var(--gradient-header);
