@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Company Header Example</title>
+    <title>Miku tienda</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -222,7 +222,7 @@
                                     <h5 class="card-title">${name}</h5>
                                     <div class="d-flex justify-content-between align-items-center mt-auto">
                                         <span class="h5 mb-0 text-primary">$${price}</span>
-                                        <button class="btn btn-outline-primary btn-sm">Add to Cart</button>
+                                        <button class="btn btn-outline-primary btn-sm product-btn" data-product-name="${name}">Add to Cart</button>
                                     </div>
                                 </div>
                             </div>
@@ -243,6 +243,19 @@
                     `;
                 });
             });
+
+            // After products are rendered, add GA event listeners
+            setTimeout(function () {
+                document.querySelectorAll('.product-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var productName = btn.getAttribute('data-product-name');
+                        gtag('event', 'product_button_click', {
+                            'event_category': 'Product',
+                            'event_label': productName
+                        });
+                    });
+                });
+            }, 500);
         });
     </script>
 </body>
