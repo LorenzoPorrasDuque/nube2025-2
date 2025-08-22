@@ -251,9 +251,10 @@
                     btn.addEventListener('click', function () {
                         var productName = btn.getAttribute('data-product-name');
                         gtag('event', 'product_button_click', {
-                            'event_category': 'Product',
-                            'event_label': productName
+                            custom_parameter_product: productName
                         });
+
+                        console.log('Analytics event sent for product:', productName);
                     });
                 });
             }, 500);
