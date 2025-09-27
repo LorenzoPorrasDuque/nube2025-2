@@ -24,6 +24,56 @@
     </script>
     <!-- Contentful SDK -->
     <script src="https://cdn.jsdelivr.net/npm/contentful@latest/dist/contentful.browser.min.js"></script>
+    <!-- Custom Styles for Comments -->
+    <style>
+        .comments-section {
+            border-top: 1px solid #e9ecef;
+            padding-top: 15px;
+        }
+
+        .comments-section h6 {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .comment-item {
+            transition: background-color 0.2s ease;
+        }
+
+        .comment-item:hover {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin: -5px;
+        }
+
+        .comments-list .border-bottom:last-child {
+            border-bottom: none !important;
+        }
+
+        .comment-btn {
+            font-size: 12px;
+        }
+
+        .custom-alert {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #commentModal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .card-body .comments-list {
+            font-size: 12px;
+        }
+
+        .card-body .comments-list .border-bottom {
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+    </style>
 </head>
 
 <body>
@@ -84,6 +134,9 @@
             <!-- Left Side: List and Social Media Buttons -->
             <div class="col-md-2 mb-4 h-100">
                 <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#suggestionModal">
+                        <i class="bi bi-lightbulb"></i> Suggest Product
+                    </button>
                     <a href="#" class="btn btn-outline-primary"><i class="bi bi-facebook"></i></a>
                     <a href="#" class="btn btn-outline-info"><i class="bi bi-twitter"></i></a>
                     <a href="#" class="btn btn-outline-danger"><i class="bi bi-instagram"></i></a>
@@ -169,6 +222,10 @@
         </div>
     </div>
     <script>
+        // Product Suggestion API endpoints - 2 separate Lambda functions
+        const SUGGESTION_POST_URL = 'https://uf4ggsywu3.execute-api.us-east-1.amazonaws.com/prod'; // POST Lambda for creating suggestions
+        const SUGGESTION_GET_URL = 'https://uf4ggsywu3.execute-api.us-east-1.amazonaws.com/prod'; // GET Lambda for reading suggestions
+
         document.addEventListener('DOMContentLoaded', function () {
             var client = contentful.createClient({
                 space: 'f304yr14z1hv', // Correct space ID
@@ -273,7 +330,19 @@
                                     <h5 class="card-title">${name}</h5>
                                     <div class="d-flex justify-content-between align-items-center mt-auto">
                                         <span class="h5 mb-0 text-primary">$${price}</span>
-                                        <button class="btn btn-outline-primary btn-sm product-btn" data-product-name="${name}">Add to Cart</button>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-outline-primary btn-sm product-btn" data-product-name="${name}">Add to Cart</button>
+                                            <button class="btn btn-outline-secondary btn-sm comment-btn" data-product-name="${name}" data-bs-toggle="modal" data-bs-target="#commentModal">
+                                                <i class="bi bi-chat"></i> Comments
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!-- Comments display area -->
+                                    <div class="comments-section mt-3" id="comments-${name.replace(/[^a-zA-Z0-9]/g, '')}">
+                                        <h6>Recent Comments:</h6>
+                                        <div class="comments-list" style="max-height: 150px; overflow-y: auto;">
+                                            <!-- Comments will be loaded here -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -301,15 +370,578 @@
                     btn.addEventListener('click', function () {
                         var productName = btn.getAttribute('data-product-name');
                         gtag('event', 'product_button_click', {
-                            custom_parameter_product: productName
+                            'event_category': 'Product',
+                            'event_label': productName
                         });
-
-                        console.log('Analytics event sent for product:', productName);
                     });
                 });
+
+                // Add comment button event listeners
+                document.querySelectorAll('.comment-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var productName = btn.getAttribute('data-product-name');
+                        openCommentModal(productName);
+                    });
+                });
+
+                // Load comments for each product
+                loadAllProductComments();
             }, 500);
+
+            // Initialize suggestion form handlers
+            initializeSuggestionHandlers();
+        }); // End of DOMContentLoaded event listener
+
+        // Global variable to track current product
+        let currentProduct = '';
+
+        // Comment API base URL - You'll need to update this with your actual API URL
+        const API_BASE_URL = 'http://localhost/nube2025-2/lab1/comments-api.php';
+
+        /**
+         * Open comment modal for a specific product
+         */
+        function openCommentModal(productName) {
+            currentProduct = productName;
+            document.getElementById('modalProductName').textContent = productName;
+
+            // Clear form
+            document.getElementById('commentForm').reset();
+
+            // Load comments for this product
+            loadProductComments(productName);
+        }        /**
+         * Load comments for a specific product
+         */
+        function loadProductComments(productName) {
+            const commentsContainer = document.getElementById('commentsContainer');
+            commentsContainer.innerHTML = '<div class="text-center text-muted"><i class="bi bi-arrow-repeat"></i><p>Loading comments...</p></div>';
+
+            fetch(`${API_BASE_URL}?action=get_comments&product_name=${encodeURIComponent(productName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayComments(data.comments);
+                    } else {
+                        commentsContainer.innerHTML = `<div class="alert alert-warning">${data.error || 'Failed to load comments'}</div>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading comments:', error);
+                    commentsContainer.innerHTML = '<div class="alert alert-danger">Error loading comments. Please check your connection.</div>';
+                });
+        }
+
+        /**
+         * Load comments for all products (preview in cards)
+         */
+        function loadAllProductComments() {
+            fetch(`${API_BASE_URL}?action=get_comments`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Group comments by product
+                        const commentsByProduct = {};
+                        data.comments.forEach(comment => {
+                            if (!commentsByProduct[comment.product_name]) {
+                                commentsByProduct[comment.product_name] = [];
+                            }
+                            commentsByProduct[comment.product_name].push(comment);
+                        });
+
+                        // Update each product's comment section
+                        Object.keys(commentsByProduct).forEach(productName => {
+                            const productId = productName.replace(/[^a-zA-Z0-9]/g, '');
+                            const commentsSection = document.getElementById(`comments-${productId}`);
+                            if (commentsSection) {
+                                const commentsList = commentsSection.querySelector('.comments-list');
+                                const recentComments = commentsByProduct[productName].slice(0, 2); // Show only 2 recent comments
+
+                                commentsList.innerHTML = recentComments.map(comment => `
+                                    <div class="border-bottom pb-2 mb-2">
+                                        <small class="text-muted">${comment.user_name} - ${comment.formatted_date}</small>
+                                        <p class="mb-0 small">${comment.comment_text}</p>
+                                    </div>
+                                `).join('');
+
+                                if (recentComments.length === 0) {
+                                    commentsList.innerHTML = '<small class="text-muted">No comments yet</small>';
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading all comments:', error);
+                });
+        }
+
+        /**
+         * Display comments in the modal
+         */
+        function displayComments(comments) {
+            const commentsContainer = document.getElementById('commentsContainer');
+
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = '<div class="text-center text-muted"><i class="bi bi-chat"></i><p>No comments yet. Be the first to comment!</p></div>';
+                return;
+            }
+
+            const commentsHTML = comments.map(comment => `
+                <div class="comment-item border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0 text-primary">${escapeHtml(comment.user_name)}</h6>
+                        <small class="text-muted">${comment.formatted_date}</small>
+                    </div>
+                    <p class="mb-0">${escapeHtml(comment.comment_text)}</p>
+                </div>
+            `).join('');
+
+            commentsContainer.innerHTML = commentsHTML;
+        }
+
+        /**
+         * Handle comment form submission
+         */
+        document.getElementById('commentForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const userName = document.getElementById('userName').value.trim();
+            const commentText = document.getElementById('commentText').value.trim();
+
+            if (!userName || !commentText) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            if (commentText.length < 5) {
+                alert('Comment must be at least 5 characters long');
+                return;
+            }
+
+            // Disable submit button
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Submitting...';
+
+            // Prepare comment data
+            const commentData = {
+                product_name: currentProduct,
+                user_name: userName,
+                comment_text: commentText
+            };
+
+            // Submit comment
+            fetch(`${API_BASE_URL}?action=add_comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(commentData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear form
+                        document.getElementById('commentForm').reset();
+
+                        // Reload comments
+                        loadProductComments(currentProduct);
+                        loadAllProductComments();
+
+                        // Show success message
+                        showAlert('Comment added successfully!', 'success');
+                    } else {
+                        showAlert(data.error || 'Failed to add comment', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding comment:', error);
+                    showAlert('Error adding comment. Please check your connection.', 'error');
+                })
+                .finally(() => {
+                    // Re-enable submit button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
         });
+
+        /**
+         * Refresh comments button handler
+         */
+        document.getElementById('refreshCommentsBtn').addEventListener('click', function () {
+            if (currentProduct) {
+                loadProductComments(currentProduct);
+            }
+        });
+
+        /**
+         * Initialize suggestion form handlers
+         */
+        function initializeSuggestionHandlers() {
+            console.log('Initializing suggestion handlers');
+
+            // Check if form exists
+            const suggestionForm = document.getElementById('suggestionForm');
+            if (!suggestionForm) {
+                console.error('Suggestion form not found!');
+                return;
+            }
+
+            console.log('Suggestion form found, adding event listener');
+
+            /**
+             * Handle suggestion form submission
+             */
+            suggestionForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                console.log('Form submission prevented - no page refresh should occur');
+                console.log('Form submission started');
+
+                const productName = document.getElementById('productName').value.trim();
+                const productDescription = document.getElementById('productDescription').value.trim();
+                const estimatedPrice = document.getElementById('estimatedPrice').value;
+
+                console.log('Form data:', { productName, productDescription, estimatedPrice });
+
+                if (!productName || !productDescription) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                if (productDescription.length < 10) {
+                    alert('Description must be at least 10 characters long');
+                    return;
+                }
+
+                // Disable submit button
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Submitting...';
+
+                // Prepare suggestion data for POST Lambda function
+                const suggestionData = {
+                    product_name: productName,
+                    product_description: productDescription,
+                    estimated_price: estimatedPrice ? parseFloat(estimatedPrice) : null
+                };
+
+                console.log('Sending data to POST URL:', SUGGESTION_POST_URL);
+                console.log('Suggestion data:', suggestionData);
+
+                // Submit suggestion to POST Lambda API
+                fetch(SUGGESTION_POST_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(suggestionData)
+                })
+                    .then(response => {
+                        console.log('POST Response status:', response.status);
+                        console.log('POST Response headers:', response.headers);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('POST Response data:', data);
+                        if (data.success) {
+                            // Clear form
+                            document.getElementById('suggestionForm').reset();
+
+                            // Reload suggestions
+                            loadRecentSuggestions();
+
+                            // Show success message
+                            showAlert('Product suggestion submitted successfully! Thank you for your feedback.', 'success');
+                        } else {
+                            showAlert(data.error || 'Failed to submit suggestion', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting suggestion:', error);
+                        showAlert('Error submitting suggestion. Please check your connection and try again.', 'error');
+                    })
+                    .finally(() => {
+                        // Re-enable submit button
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    });
+            });
+
+            /**
+             * Load recent suggestions from GET Lambda API
+             */
+            function loadRecentSuggestions() {
+                console.log('Loading recent suggestions from GET URL:', SUGGESTION_GET_URL);
+                const suggestionsContainer = document.getElementById('suggestionsContainer');
+                suggestionsContainer.innerHTML = '<div class="text-center text-muted"><i class="bi bi-arrow-repeat"></i><p>Loading suggestions...</p></div>';
+
+                fetch(SUGGESTION_GET_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(response => {
+                        console.log('GET Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('GET Response data:', data);
+                        if (data.success) {
+                            displaySuggestions(data.suggestions || []);
+                        } else {
+                            suggestionsContainer.innerHTML = `<div class="alert alert-warning">${data.error || 'Failed to load suggestions'}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading suggestions:', error);
+                        suggestionsContainer.innerHTML = '<div class="alert alert-danger">Error loading suggestions. GET Lambda API not available.</div>';
+                    });
+            }
+
+            /**
+             * Display suggestions in the modal
+             */
+            function displaySuggestions(suggestions) {
+                const suggestionsContainer = document.getElementById('suggestionsContainer');
+
+                if (!suggestions || suggestions.length === 0) {
+                    suggestionsContainer.innerHTML = '<div class="text-center text-muted"><i class="bi bi-lightbulb"></i><p>No suggestions yet. Be the first to suggest a product!</p></div>';
+                    return;
+                }
+
+                const suggestionsHTML = suggestions.map(suggestion => {
+                    const statusClass = {
+                        'pending': 'warning',
+                        'approved': 'success',
+                        'rejected': 'danger',
+                        'in-progress': 'info'
+                    }[suggestion.status] || 'secondary';
+
+                    // Handle both camelCase and snake_case field names from Python
+                    const productName = suggestion.product_name || suggestion.productName || 'Unknown Product';
+                    const productDescription = suggestion.product_description || suggestion.productDescription || 'No description available';
+                    const estimatedPrice = suggestion.estimated_price || suggestion.estimatedPrice;
+                    const createdAt = suggestion.created_at || suggestion.createdAt;
+
+                    return `
+                    <div class="suggestion-item border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0 text-primary">${escapeHtml(productName)}</h6>
+                            <span class="badge bg-${statusClass}">${suggestion.status}</span>
+                        </div>
+                        <p class="mb-1 text-muted">${escapeHtml(productDescription)}</p>
+                        ${estimatedPrice ? `<p class="mb-1"><strong>Estimated Price:</strong> $${estimatedPrice}</p>` : ''}
+                        <div class="d-flex justify-content-end">
+                            <small class="text-muted">${createdAt ? new Date(createdAt).toLocaleDateString() : 'Recent'}</small>
+                        </div>
+                    </div>
+                `;
+                }).join('');
+
+                suggestionsContainer.innerHTML = suggestionsHTML;
+            }
+
+            /**
+             * Refresh suggestions button handler
+             */
+            document.getElementById('refreshSuggestionsBtn').addEventListener('click', function () {
+                loadRecentSuggestions();
+            });
+
+            // Load suggestions when suggestion modal is opened
+            document.getElementById('suggestionModal').addEventListener('shown.bs.modal', function () {
+                loadRecentSuggestions();
+            });
+        } // End of initializeSuggestionHandlers function
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+        }
+
+        /**
+         * Show alert messages
+         */
+        function showAlert(message, type) {
+            // Remove existing alerts
+            const existingAlert = document.querySelector('.custom-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            // Create new alert
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show custom-alert" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', alertHTML);
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = document.querySelector('.custom-alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 5000);
+        };
     </script>
+
+    <!-- Comment Modal -->
+    <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="commentModalLabel">Comments for <span id="modalProductName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Add Comment Form -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Add Your Comment</h6>
+                        </div>
+                        <div class="card-body">
+                            <form id="commentForm">
+                                <div class="mb-3">
+                                    <label for="userName" class="form-label">Your Name</label>
+                                    <input type="text" class="form-control" id="userName" required maxlength="100"
+                                        placeholder="Enter your name">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="commentText" class="form-label">Comment</label>
+                                    <textarea class="form-control" id="commentText" rows="3" required minlength="5"
+                                        placeholder="Write your comment about this product..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send"></i> Submit Comment
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Comments Display -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">All Comments</h6>
+                            <button class="btn btn-sm btn-outline-secondary" id="refreshCommentsBtn">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="commentsContainer" style="max-height: 400px; overflow-y: auto;">
+                                <!-- Comments will be loaded here -->
+                                <div class="text-center text-muted">
+                                    <i class="bi bi-chat-dots"></i>
+                                    <p>Loading comments...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Suggestion Modal -->
+    <div class="modal fade" id="suggestionModal" tabindex="-1" aria-labelledby="suggestionModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="suggestionModalLabel">
+                        <i class="bi bi-lightbulb"></i> Suggest a New Product
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Suggestion Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Help us improve our catalog!</h6>
+                            <small class="text-muted">Tell us about products you'd like to see in our store</small>
+                        </div>
+                        <div class="card-body">
+                            <form id="suggestionForm">
+                                <div class="mb-3">
+                                    <label for="productName" class="form-label">Product Name</label>
+                                    <input type="text" class="form-control" id="productName" required maxlength="255"
+                                        placeholder="What product would you like us to offer?">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="productDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="productDescription" rows="3" required
+                                        minlength="10"
+                                        placeholder="Describe the product, why you want it, where you've seen it, etc."></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="estimatedPrice" class="form-label">Estimated Price (Optional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="estimatedPrice" min="0"
+                                            step="0.01" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-send"></i> Submit Suggestion
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Recent Suggestions Display -->
+                    <div class="card mt-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Recent Suggestions</h6>
+                            <button class="btn btn-sm btn-outline-secondary" id="refreshSuggestionsBtn">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="suggestionsContainer" style="max-height: 300px; overflow-y: auto;">
+                                <div class="text-center text-muted">
+                                    <i class="bi bi-lightbulb"></i>
+                                    <p>Loading suggestions...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
